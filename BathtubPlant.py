@@ -1,30 +1,33 @@
-import math
-import random
+import numpy as np
+import jax.numpy as jnp
+import jax
 from AbstractPlant import AbstractPlant
 
 class BathtubPlant(AbstractPlant):
 
-    def __init__(self, A, C, H, minD, maxD, dt=1):
+    def __init__(self, A, C, H, min_D, max_D, dt=1):
         self.A = A
         self.C = C
-        self.H = H
-        self.Dmin = minD
-        self.Drange = maxD - minD
-        self.disturbaces = []
+        self.target_H = H
+        self.D_min = min_D
+        self.D_range = max_D - min_D
         self.dt = dt
 
-    def get_V(self):
-        return math.sqrt(2*9.81*self.H)
+    def get_V(self, H):
+        return jnp.sqrt(2*9.81*jnp.maximum(H, 0))
     
-    def get_disturbance(self):
-        D = random.random() * (self.Drange) + self.Dmin
-        self.disturbaces.append(D)
+    def get_disturbances(self, L):
+        return np.random.random(L) * (self.D_range) + self.D_min
+        # return jax.random.uniform(key=random_key, shape=(L,), minval=self.D_min, maxval=self.D_max)
 
-    def step(self, U):
-        D = self.get_disturbance()
-        V = self.get_V()
+    def step(self, Y, U, D):
+        V = self.get_V(Y)
         Q = V*self.C
-        dHdt = U + D - Q
-        dH = dHdt * self.dt
-        self.H += dH
-        return self.H
+        dBdt = U + D - Q
+        dYdt = dBdt / self.A
+        dY = dYdt * self.dt
+        newY = Y + dY
+        return newY
+    
+    def get_target_Y(self):
+        return self.target_H
