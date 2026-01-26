@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import jax.numpy as jnp
 import jax
 
-from AbstractPlant import AbstractPlant
-from AbstractController import AbstractController
+from Plant.AbstractPlant import AbstractPlant
+from Controller.AbstractController import AbstractController
 
 
 class ControlSystem:
@@ -40,7 +40,7 @@ class ControlSystem:
 
     def run_epoch_mse(self, model_params, disturbances):
 
-        E_hist, Y_hist, U_hist = self.run_epoch(model_params, disturbances)
+        E_hist, _, _ = self.run_epoch(model_params, disturbances)
         
         MSE = jnp.square(jnp.array(E_hist)).mean()
         return MSE
@@ -70,15 +70,16 @@ class ControlSystem:
 
         _, Y_hist, U_hist = self.run_epoch(model_params, disturbances)
         
-        plt.plot(Y_hist)
-        plt.plot(U_hist)
-        plt.plot(disturbances)
+        plt.plot(Y_hist, label='Y')
+        plt.plot(U_hist, label='Signal')
+        plt.plot(disturbances, label='Disturbance')
+        plt.legend()
         plt.show()
-
 
     
     def visualize_training(self):
-        plt.plot(self.iteration_hist, self.mse_hist) # type: ignore
+        plt.plot(self.iteration_hist, self.mse_hist, label='MSE') # type: ignore
+        plt.legend()
         plt.show()
         if self.param_hist:
             plt.plot(self.iteration_hist, self.param_hist) # type: ignore

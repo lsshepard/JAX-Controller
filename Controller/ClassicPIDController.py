@@ -1,4 +1,4 @@
-from AbstractController import AbstractController
+from Controller.AbstractController import AbstractController
 import jax.numpy as jnp
 
 class ClassicPIDController(AbstractController):
@@ -14,8 +14,4 @@ class ClassicPIDController(AbstractController):
         U = model_params @ E_vec
         return U
         
-    def get_model_params(self) -> jnp.ndarray:
-        return self.model_params.copy()
-
-    def set_model_params(self, new_params: jnp.ndarray):
-        self.model_params = new_params.copy()
+    

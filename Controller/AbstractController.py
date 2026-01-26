@@ -8,7 +8,7 @@ class AbstractController(ABC):
         pass
 
     def get_model_params(self) -> jnp.ndarray:
-        ...
+        return self.model_params.copy()
 
     def set_model_params(self, new_params: jnp.ndarray):
-        pass
+        self.model_params = new_params.copy()
