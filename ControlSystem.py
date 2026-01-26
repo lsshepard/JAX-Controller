@@ -46,15 +46,13 @@ class ControlSystem:
         return MSE
     
     def run_epoch(self, model_params, disturbances):
-        Y_hist = []
-        U_hist = []
-        E_hist = [0.0]
+        Y_hist, U_hist, E_hist = [], [], []
         target_Y = self.plant.get_target_Y()
-
-        Y = target_Y
+        plant_state = self.plant.get_init_state()
         U = 0
+
         for j in range(self.num_timesteps):
-            Y = self.plant.step(Y, U, disturbances[j])
+            Y, plant_state = self.plant.step(plant_state, U, disturbances[j])
             E = target_Y - Y
             U = self.controller.step(E, model_params, E_hist)
             

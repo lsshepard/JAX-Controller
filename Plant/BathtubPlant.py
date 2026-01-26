@@ -1,6 +1,4 @@
-import numpy as np
 import jax.numpy as jnp
-import jax
 from Plant.AbstractPlant import AbstractPlant
 
 class BathtubPlant(AbstractPlant):
@@ -12,12 +10,16 @@ class BathtubPlant(AbstractPlant):
 
     def get_V(self, H):
         return jnp.sqrt(2*9.81*jnp.maximum(H, 0))
+    
+    def get_init_state(self):
+        return self.get_target_Y()
 
-    def step(self, Y, U, D):
+    def step(self, state, U, D):
+        Y = state
         V = self.get_V(Y)
         Q = V*self.C
         dBdt = U + D - Q
         dYdt = dBdt / self.A
         dY = dYdt * self.dt
         newY = Y + dY
-        return newY
+        return (newY, newY)

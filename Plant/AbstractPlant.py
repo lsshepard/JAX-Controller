@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Tuple
 import numpy as np
 
 class AbstractPlant(ABC):
@@ -11,7 +11,11 @@ class AbstractPlant(ABC):
         self.dt = dt
 
     @abstractmethod
-    def step(self, Y, U, D) -> Any :
+    def step(self, state, U, D) -> tuple[Any, Any]:
+        pass
+
+    @abstractmethod
+    def get_init_state(self) -> Any:
         pass
 
     def get_disturbances(self, L):
