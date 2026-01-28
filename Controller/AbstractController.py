@@ -4,7 +4,7 @@ import jax.numpy as jnp
 class AbstractController(ABC):
     
     @abstractmethod
-    def step(self, E, model_params, err_hist) -> float:
+    def step(self, model_params, err_hist) -> jnp.ndarray:
         pass
 
     def get_model_params(self) -> jnp.ndarray:

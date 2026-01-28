@@ -30,13 +30,20 @@ class ControlSystem:
             disturbances = self.plant.get_disturbances(self.num_timesteps)
             mse, grads = epoch_grads(model_params, disturbances)
 
-            new_model_params = model_params - self.lr * grads
+            # print(mse, grads)
+
+            # new_model_params = model_params - self.lr * grads
+            new_model_params = jax.tree.map(
+                lambda p, g: p - self.lr * g,
+                model_params,
+                grads
+            )
             self.controller.set_model_params(new_model_params)
 
             self.iteration_hist.append(i)
             self.mse_hist.append(mse)
             if self.param_hist is not None: self.param_hist.append(new_model_params)
-            print("Epoch", i, 'mse:', mse)
+            if (i+1) % 5 == 0: print("Epoch", i+1, 'mse:', mse)
 
     def run_epoch_mse(self, model_params, disturbances):
 
@@ -54,9 +61,9 @@ class ControlSystem:
         for j in range(self.num_timesteps):
             Y, plant_state = self.plant.step(plant_state, U, disturbances[j])
             E = target_Y - Y
-            U = self.controller.step(E, model_params, E_hist)
-            
             E_hist.append(E)
+            U = self.controller.step(model_params, E_hist)
+            
             Y_hist.append(Y)
             U_hist.append(U)
         
