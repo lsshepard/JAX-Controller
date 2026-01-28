@@ -25,19 +25,22 @@ class ControlSystem:
         self.mse_hist = []
         epoch_grads = jax.value_and_grad(self.run_epoch_mse, argnums=0)
 
-        for i in range(self.num_epochs):
-            model_params = self.controller.get_model_params()
-            disturbances = self.plant.get_disturbances(self.num_timesteps)
+        @jax.jit
+        def train_step(model_params, disturbances):
             mse, grads = epoch_grads(model_params, disturbances)
-
-            # print(mse, grads)
-
-            # new_model_params = model_params - self.lr * grads
             new_model_params = jax.tree.map(
                 lambda p, g: p - self.lr * g,
                 model_params,
                 grads
             )
+            return mse, new_model_params
+
+        for i in range(self.num_epochs):
+            model_params = self.controller.get_model_params()
+            disturbances = self.plant.get_disturbances(self.num_timesteps)
+            
+            mse, new_model_params = train_step(model_params, disturbances)
+
             self.controller.set_model_params(new_model_params)
 
             self.iteration_hist.append(i)
@@ -82,10 +85,12 @@ class ControlSystem:
         plt.show()
 
     
-    def visualize_training(self):
+    def visualize_training(self, param_labels=['Kp', 'Ki', 'Kd']):
         plt.plot(self.iteration_hist, self.mse_hist, label='MSE') # type: ignore
         plt.legend()
         plt.show()
         if self.param_hist:
-            plt.plot(self.iteration_hist, self.param_hist) # type: ignore
+            lines = plt.plot(self.iteration_hist, self.param_hist) # type: ignore
+            [line.set_label(l) for line, l in zip(lines, param_labels)]
+            plt.legend()
             plt.show()
