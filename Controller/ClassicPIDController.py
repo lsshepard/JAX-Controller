@@ -3,15 +3,11 @@ import jax.numpy as jnp
 
 class ClassicPIDController(AbstractController):
 
-    def __init__(self, dt=1):
+    def __init__(self):
         self.model_params = jnp.array([0.0, 0.0, 0.0])
-        self.dt = dt
 
-    def step(self, model_params, err_hist):
-        E = err_hist[-1]
-        dEdt = (E - err_hist[-2]) / self.dt if len(err_hist) > 1 else 0
-        sum_E = sum(err_hist) * self.dt
-        E_vec = jnp.array([E, sum_E, dEdt])
+    def step(self, model_params, E, IE, dE):
+        E_vec = jnp.array([E, IE, dE])
         U = model_params @ E_vec
         return U
         

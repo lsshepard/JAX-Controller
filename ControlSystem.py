@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import jax.numpy as jnp
 import jax
+import time
 
 from Plant.AbstractPlant import AbstractPlant
 from Controller.AbstractController import AbstractController
@@ -20,6 +21,7 @@ class ControlSystem:
         
 
     def fit(self):
+        start_time = time.time()
 
         self.iteration_hist = []
         self.mse_hist = []
@@ -46,13 +48,15 @@ class ControlSystem:
             self.iteration_hist.append(i)
             self.mse_hist.append(mse)
             if self.param_hist is not None: self.param_hist.append(new_model_params)
-            if (i+1) % 5 == 0: print("Epoch", i+1, 'mse:', mse)
+            # if (i+1) % 5 == 0: print("Epoch", i+1, 'mse:', mse)
+
+        stop_time = time.time()
+        elapsed_time = stop_time - start_time
+        print('Training time:', elapsed_time)
 
     def run_epoch_mse(self, model_params, disturbances):
-
         E_hist, _, _ = self.run_epoch(model_params, disturbances)
-        
-        MSE = jnp.square(jnp.array(E_hist)).mean()
+        MSE = jnp.mean(jnp.square(jnp.array(E_hist)))
         return MSE
     
     def run_epoch(self, model_params, disturbances):
@@ -60,13 +64,17 @@ class ControlSystem:
         target_Y = self.plant.get_target_Y()
         plant_state = self.plant.get_init_state()
         U = 0
+        IE = 0
 
         for j in range(self.num_timesteps):
             Y, plant_state = self.plant.step(plant_state, U, disturbances[j])
             E = target_Y - Y
-            E_hist.append(E)
-            U = self.controller.step(model_params, E_hist)
+            IE += E
+            dE = (E - E_hist[-1]) if E_hist else 0
             
+            U = self.controller.step(model_params, E, IE, dE)
+            
+            E_hist.append(E)
             Y_hist.append(Y)
             U_hist.append(U)
         

@@ -4,11 +4,10 @@ import numpy as np
 
 class NNPIDController(AbstractController):
 
-    def __init__(self, hidden_layers, min_init, max_init, input_d = 3, output_d = 1, dt=1):
+    def __init__(self, hidden_layers, min_init, max_init, input_d = 3, output_d = 1):
 
         self.min_init = min_init
         self.max_init = max_init
-        self.dt = dt
         
         layer_params = []
         activation_funcs = []
@@ -25,18 +24,13 @@ class NNPIDController(AbstractController):
         self.activation_funcs = activation_funcs
         
 
-    def step(self, model_params, err_hist):
-        E = err_hist[-1]
-        dEdt = (E - err_hist[-2]) / self.dt if len(err_hist) > 1 else 0
-        sum_E = sum(err_hist) * self.dt
-        X = jnp.array([[E, sum_E, dEdt]])
+    def step(self, model_params, E, IE, dE):
+        X = jnp.array([[E, IE, dE]])
 
         for i in range(len(model_params)-1):
-            # print('SHAPES:', X.shape, model_params[i][0].shape)
             X = X @ model_params[i][0] + model_params[i][1]
             X = self.activation_funcs[i](X)
 
-        # print('SHAPES:', X.shape, model_params[-1][0].shape)
         y = X @ model_params[-1][0] + model_params[-1][1]
 
         return jnp.squeeze(y)
