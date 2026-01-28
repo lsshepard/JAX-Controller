@@ -3,7 +3,7 @@ from Plant.AbstractPlant import AbstractPlant
 
 class Bathtub(AbstractPlant):
 
-    def __init__(self, target_Y, min_D, max_D, A, C, dt=1):
+    def __init__(self, target_Y, min_D, max_D, A, C, dt=1.0):
         self.A = A
         self.C = C
         super().__init__(target_Y, min_D, max_D, dt)

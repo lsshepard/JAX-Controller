@@ -3,7 +3,7 @@ from Plant.AbstractPlant import AbstractPlant
 
 class CournotCompetition(AbstractPlant):
 
-    def __init__(self, target_Y, min_D, max_D, max_price, marginal_cost, dt=1):
+    def __init__(self, target_Y, min_D, max_D, max_price, marginal_cost, dt=1.0):
         self.max_price = max_price
         self.marginal_cost = marginal_cost
         super().__init__(target_Y, min_D, max_D, dt)

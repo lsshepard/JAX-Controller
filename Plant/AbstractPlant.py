@@ -4,7 +4,7 @@ import numpy as np
 
 class AbstractPlant(ABC):
     
-    def __init__(self, target_Y, min_D, max_D, dt=1):
+    def __init__(self, target_Y, min_D, max_D, dt=1.0):
         self.target_Y = target_Y
         self.D_min = min_D
         self.D_range = max_D - min_D
