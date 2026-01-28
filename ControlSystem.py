@@ -60,24 +60,27 @@ class ControlSystem:
         return MSE
     
     def run_epoch(self, model_params, disturbances):
-        Y_hist, U_hist, E_hist = [], [], []
-        target_Y = self.plant.get_target_Y()
-        plant_state = self.plant.get_init_state()
-        U = 0
-        IE = 0
-
-        for j in range(self.num_timesteps):
-            Y, plant_state = self.plant.step(plant_state, U, disturbances[j])
-            E = target_Y - Y
-            IE += E
-            dE = (E - E_hist[-1]) if E_hist else 0
-            
-            U = self.controller.step(model_params, E, IE, dE)
-            
-            E_hist.append(E)
-            Y_hist.append(Y)
-            U_hist.append(U)
         
+        target_Y = self.plant.get_target_Y()
+
+        def scan_step(carry, D):
+            plant_state, U, IE, prev_E = carry
+
+            Y, next_plant_state = self.plant.step(plant_state, U, D)
+            E = target_Y - Y
+            next_IE = IE + E
+            dE = E - prev_E
+
+            next_U = self.controller.step(model_params, E, next_IE, dE)
+
+            next_carry = (next_plant_state, next_U, next_IE, E)
+            history = (E, Y, next_U)
+            return next_carry, history
+        
+        init_carry = (self.plant.get_init_state(), 0.0, 0.0, 0.0)
+
+        _, (E_hist, Y_hist, U_hist) = jax.lax.scan(scan_step, init_carry, disturbances)
+
         return E_hist, Y_hist, U_hist
     
     def visualize_run(self):
