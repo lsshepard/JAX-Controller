@@ -1,3 +1,6 @@
+import numpy as np
+np.random.seed(42)
+
 from Controller.ClassicPIDController import ClassicPIDController
 from Controller.NNPIDController import NNPIDController
 from Plant.Bathtub import Bathtub
@@ -6,31 +9,6 @@ from Plant.CruiseControl import CruiseControl
 from ControlSystem import ControlSystem
 
 
-# controller = ClassicPIDController()
-# plant = Bathtub(10, -0.2, 0.2, 1, 0.1)
-# ConSys = ControlSystem(plant, controller, 150, 10, 0.0001, track_params=False)
-
-# controller = NNPIDController([(5, 'RELU'), (3, 'RELU')], 0, 1)
-# plant = Bathtub(10, -0.3, 0.3, 1, 0.1)
-# ConSys = ControlSystem(plant, controller, 100, 20, 0.00005, track_params=False)
-
-# controller = NNPIDController([(1, 'SIGMOID')], 0, 0)
-# plant = CournotCompetition(1, -0.1, 0.1, 10, 0.5)
-# ConSys = ControlSystem(plant, controller, 50, 30, 0.00001, track_params=False)
-
-# plant = CournotCompetition(1, -0.1, 0.1, 10, 0.5)
-# ConSys = ControlSystem(plant, controller, 50, 20, 0.0000001, track_params=True)
-
-# controller = ClassicPIDController()
-# controller = NNPIDController([(1, 'SIGMOID')], 0, 0)
-# plant = CruiseControl(10, -0.2, 0.2, 0.1)
-# ConSys = ControlSystem(plant, controller, 50, 100, 0.0000002, track_params=False)
-
-
-# ConSys.fit()
-# ConSys.visualize_training()
-# ConSys.visualize_run()
-
 def run(plant, controller, epochs, timesteps, lr, visualize_run=False):
     track_params = isinstance(controller, ClassicPIDController)
     ConSys = ControlSystem(plant, controller, epochs, timesteps, lr, track_params)
@@ -38,7 +16,23 @@ def run(plant, controller, epochs, timesteps, lr, visualize_run=False):
     ConSys.visualize_training()
     if visualize_run: ConSys.visualize_run()
 
-# run(CruiseControl(10, -0.2, 0.2, 0.1), NNPIDController([(1, 'SIGMOID')], 0, 0), epochs=20, timesteps=100, lr=2e-6, visualize_run=True)
-# run(CruiseControl(10, -0.01, 0.01, 0.1), ClassicPIDController(), epochs=20, timesteps=100, lr=1e-7, visualize_run=True)
+# run(CruiseControl(10, -0.001, 0.001, 0.1), NNPIDController([(5, 'SIGMOID'), (2, 'RELU')], 0, 0), epochs=1000, timesteps=250, lr=2e-5, visualize_run=True)
+# run(CruiseControl(10, -0.001, 0.001, 0.1), ClassicPIDController(), epochs=150, timesteps=250, lr=2e-9, visualize_run=True)
 
-run(Bathtub(10, -0.1, 0.1, 1, 0.1), ClassicPIDController(), epochs=50, timesteps=100, lr=1e-7, visualize_run=True)
+# run 1
+# run(Bathtub(10, -0.1, 0.1, 1, 0.1), ClassicPIDController(), epochs=1000, timesteps=120, lr=2e-7, visualize_run=True)
+
+# run 2
+# run(Bathtub(10, -0.1, 0.1, 1, 0.1),  NNPIDController([(5, 'RELU'), (2, 'RELU')], 0, 0), epochs=1000, timesteps=120, lr=1e-4, visualize_run=True)
+
+# run 3
+# run(CournotCompetition(6, -0.1, 0.1, 10, 0.5), ClassicPIDController(), epochs=500, timesteps=120, lr=1e-7, visualize_run=True)
+
+# run 4
+# run(CournotCompetition(6, -0.1, 0.1, 10, 0.5), NNPIDController([(5, 'TANH'), (2, 'SIGMOID')], 0, 0), epochs=500, timesteps=120, lr=3e-8, visualize_run=True)
+
+# run 5
+# run(CruiseControl(5, -0.01, 0.01, drag_k=0.1, min_a=-np.pi/4, max_a=np.pi/4), ClassicPIDController(), epochs=1000, timesteps=1000, lr=5e-9, visualize_run=True)
+
+# run 6
+# run(CruiseControl(5, -0.01, 0.01, drag_k=0.1, min_a=-np.pi/4, max_a=np.pi/4), NNPIDController([(3, 'RELU')], -0.1, 0.1), epochs=1000, timesteps=1000, lr=1e-6, visualize_run=True)

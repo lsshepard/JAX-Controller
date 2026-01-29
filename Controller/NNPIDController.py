@@ -37,7 +37,7 @@ class NNPIDController(AbstractController):
     
     def get_layer(self, fan_in, fan_out):
         A = np.random.uniform(self.min_init, self.max_init, (fan_in, fan_out))
-        b = np.random.uniform(self.max_init, self.max_init, (fan_out))
+        b = np.random.uniform(self.min_init, self.max_init, (fan_out))
         return (A, b)
 
 
@@ -61,6 +61,7 @@ class NNPIDController(AbstractController):
     @staticmethod
     def tanh(x):
         return (jnp.exp(2*x) - 1) / (jnp.exp(2*x) + 1)
+        # return jnp.tanh(x)
     
     @staticmethod
     def linear(x):

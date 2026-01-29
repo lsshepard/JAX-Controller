@@ -36,19 +36,21 @@ class ControlSystem:
                 grads
             )
             return mse, new_model_params
-
+        
+        model_params = self.controller.get_model_params()
         for i in range(self.num_epochs):
-            model_params = self.controller.get_model_params()
+            if self.param_hist is not None: self.param_hist.append(model_params)
             disturbances = self.plant.get_disturbances(self.num_timesteps)
             
-            mse, new_model_params = train_step(model_params, disturbances)
-
-            self.controller.set_model_params(new_model_params)
+            mse, model_params = train_step(model_params, disturbances)
 
             self.iteration_hist.append(i)
             self.mse_hist.append(mse)
-            if self.param_hist is not None: self.param_hist.append(new_model_params)
-            # if (i+1) % 5 == 0: print("Epoch", i+1, 'mse:', mse)
+
+            if i+1 == self.num_epochs: print("Epoch", i+1, 'mse:', mse)
+
+        self.controller.set_model_params(model_params)
+        
 
         stop_time = time.time()
         elapsed_time = stop_time - start_time
@@ -60,7 +62,7 @@ class ControlSystem:
         return MSE
     
     def run_epoch(self, model_params, disturbances):
-        
+
         target_Y = self.plant.get_target_Y()
 
         def scan_step(carry, D):
@@ -98,10 +100,16 @@ class ControlSystem:
     
     def visualize_training(self, param_labels=['Kp', 'Ki', 'Kd']):
         plt.plot(self.iteration_hist, self.mse_hist, label='MSE') # type: ignore
+        plt.title('Training loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
         plt.legend()
         plt.show()
         if self.param_hist:
             lines = plt.plot(self.iteration_hist, self.param_hist) # type: ignore
             [line.set_label(l) for line, l in zip(lines, param_labels)]
+            plt.title('Parameter evolution')
+            plt.xlabel('Epochs')
+            plt.ylabel('Parameter values')
             plt.legend()
             plt.show()
