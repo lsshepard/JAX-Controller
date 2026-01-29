@@ -95,6 +95,9 @@ class ControlSystem:
         plt.plot(U_hist, label='Signal')
         plt.plot(disturbances, label='Disturbance')
         plt.legend()
+        plt.title('Trained control system')
+        plt.xlabel('Timesteps')
+        plt.ylabel('System values')
         plt.show()
 
     
