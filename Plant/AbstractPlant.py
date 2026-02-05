@@ -14,10 +14,12 @@ class AbstractPlant(ABC):
     def step(self, state, U, D) -> tuple[Any, Any]:
         pass
 
+    # starting state that will be passed on first call to step
     @abstractmethod
     def get_init_state(self) -> Any:
         pass
 
+    # returns a vector of disturbances to be used with step
     def get_disturbances(self, L):
         return np.random.random(L) * (self.D_range) + self.D_min
         

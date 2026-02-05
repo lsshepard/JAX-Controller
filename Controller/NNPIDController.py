@@ -11,36 +11,42 @@ class NNPIDController(AbstractController):
         
         layer_params = []
         activation_funcs = []
-        if len(hidden_layers) == 0:
+        
+        # parse network configuration and initialize parameters
+        if len(hidden_layers) == 0:     # check if no hidden layers
             layer_params.append(self.get_layer(input_d, output_d))
         else:
             for i in range(len(hidden_layers)):
-                if i == 0: layer_params.append(self.get_layer(input_d, hidden_layers[i][0]))
-                else: layer_params.append(self.get_layer(hidden_layers[i-1][0], hidden_layers[i][0]))
-                activation_funcs.append(NNPIDController.get_activation_function(hidden_layers[i][1]))
-            layer_params.append(self.get_layer(hidden_layers[-1][0], output_d))
+                if i == 0: layer_params.append(self.get_layer(input_d, hidden_layers[i][0]))        # initiate first hidden layer with network input dimension
+                else: layer_params.append(self.get_layer(hidden_layers[i-1][0], hidden_layers[i][0]))   # fully hidden layer
+                activation_funcs.append(NNPIDController.get_activation_function(hidden_layers[i][1]))   # resolve activation function from string
+            layer_params.append(self.get_layer(hidden_layers[-1][0], output_d))                     # initiate last hidden layer with network output dimension
 
-        self.model_params = layer_params
-        self.activation_funcs = activation_funcs
+        self.model_params = layer_params            # save initialized parameters
+        self.activation_funcs = activation_funcs    # save resolved activation functions
         
 
     def step(self, model_params, E, IE, dE):
         X = jnp.array([[E, IE, dE]])
 
+        # pass X vector trough N - 1 layers
         for i in range(len(model_params)-1):
             X = X @ model_params[i][0] + model_params[i][1]
             X = self.activation_funcs[i](X)
 
+        # pass X vector trough output layer without activation function
         y = X @ model_params[-1][0] + model_params[-1][1]
 
         return jnp.squeeze(y)
     
+    # utility function to initialize weights and biases
     def get_layer(self, fan_in, fan_out):
         A = np.random.uniform(self.min_init, self.max_init, (fan_in, fan_out))
         b = np.random.uniform(self.min_init, self.max_init, (fan_out))
         return (A, b)
 
 
+    # utility method to resolve activation defined functions below
     @staticmethod
     def get_activation_function(name):
         match name.upper():

@@ -20,13 +20,18 @@ class ControlSystem:
         self.param_hist =  [] if track_params else None
         
 
+    # entrypoint to train the controller
     def fit(self):
-        start_time = time.time()
 
+        # track stats
+        start_time = time.time()
         self.iteration_hist = []
         self.mse_hist = []
+
+        # jax traced function
         epoch_grads = jax.value_and_grad(self.run_epoch_mse, argnums=0)
 
+        # jax compiled train step
         @jax.jit
         def train_step(model_params, disturbances):
             mse, grads = epoch_grads(model_params, disturbances)
@@ -37,25 +42,26 @@ class ControlSystem:
             )
             return mse, new_model_params
         
-        model_params = self.controller.get_model_params()
+        model_params = self.controller.get_model_params() # obtain original model parameters
         for i in range(self.num_epochs):
-            if self.param_hist is not None: self.param_hist.append(model_params)
-            disturbances = self.plant.get_disturbances(self.num_timesteps)
+            if self.param_hist is not None: self.param_hist.append(model_params)    # track parameters
+            disturbances = self.plant.get_disturbances(self.num_timesteps)          # sample disturbances before jax trace
             
-            mse, model_params = train_step(model_params, disturbances)
+            mse, model_params = train_step(model_params, disturbances)              # compute one epoch
 
-            self.iteration_hist.append(i)
+            self.iteration_hist.append(i)                                           # track stats
             self.mse_hist.append(mse)
 
-            if i+1 == self.num_epochs: print("Epoch", i+1, 'mse:', mse)
+            if i+1 == self.num_epochs: print("Epoch", i+1, 'mse:', mse)             # log final mse
 
-        self.controller.set_model_params(model_params)
+        self.controller.set_model_params(model_params)                              # save params when done training
         
-
+        
         stop_time = time.time()
         elapsed_time = stop_time - start_time
         print('Training time:', elapsed_time)
 
+    # wrapper around run_epoch to compute mse for jax
     def run_epoch_mse(self, model_params, disturbances):
         E_hist, _, _ = self.run_epoch(model_params, disturbances)
         MSE = jnp.mean(jnp.square(jnp.array(E_hist)))
@@ -65,16 +71,22 @@ class ControlSystem:
 
         target_Y = self.plant.get_target_Y()
 
+        # timestep function for jax scan
         def scan_step(carry, D):
             plant_state, U, IE, prev_E = carry
 
+            # update plant
             Y, next_plant_state = self.plant.step(plant_state, U, D)
+
+            # update errors
             E = target_Y - Y
             next_IE = IE + E
             dE = E - prev_E
 
+            # update controller
             next_U = self.controller.step(model_params, E, next_IE, dE)
 
+            # next state and tacking
             next_carry = (next_plant_state, next_U, next_IE, E)
             history = (E, Y, next_U)
             return next_carry, history
